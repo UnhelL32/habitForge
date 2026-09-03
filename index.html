@@ -57,13 +57,18 @@
     const Shield = createIcon('shield');
     const Sword = createIcon('sword');
     const Flame = createIcon('flame');
-    const Dumbbell = createIcon('dumbbell');
+    const Sparkles = createIcon('sparkles');
     const BookOpen = createIcon('book-open');
     const Droplets = createIcon('droplets');
-    const Moon = createIcon('moon');
+    const Dumbbell = createIcon('dumbbell');
     const Code = createIcon('code');
     const Globe = createIcon('globe');
+    const Moon = createIcon('moon');
+    const Calendar = createIcon('calendar');
+    const BarChart2 = createIcon('bar-chart-2');
     const User = createIcon('user');
+    const Package = createIcon('package');
+    const Bell = createIcon('bell');
     const Compass = createIcon('compass');
     const Plus = createIcon('plus');
     const Check = createIcon('check');
@@ -71,13 +76,15 @@
     const Edit3 = createIcon('edit-3');
     const Trash2 = createIcon('trash-2');
     const Zap = createIcon('zap');
+    const Lock = createIcon('lock');
     const Volume2 = createIcon('volume-2');
     const VolumeX = createIcon('volume-x');
+    const AlertTriangle = createIcon('alert-triangle');
     const CheckCircle2 = createIcon('check-circle-2');
     const Clock = createIcon('clock');
+    const PieChart = createIcon('pie-chart');
     const RotateCcw = createIcon('rotate-ccw');
     const Camera = createIcon('camera');
-    const AlertTriangle = createIcon('alert-triangle');
 
     // --- SOUND SYNTHESIZER ---
     const playSound = (type, enabled = true) => {
@@ -115,6 +122,19 @@
             osc.start(ctx.currentTime + idx * 0.09);
             osc.stop(ctx.currentTime + idx * 0.09 + 0.35);
           });
+        } else if (type === 'loot') {
+          for (let i = 0; i < 6; i++) {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(600 + i * 250, ctx.currentTime + i * 0.06);
+            gain.gain.setValueAtTime(0.1, ctx.currentTime + i * 0.06);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.06 + 0.2);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(ctx.currentTime + i * 0.06);
+            osc.stop(ctx.currentTime + i * 0.06 + 0.2);
+          }
         } else if (type === 'rebirth') {
           const notes = [300, 240, 180, 120, 280, 440];
           notes.forEach((freq, idx) => {
@@ -143,13 +163,54 @@
       } catch (e) {}
     };
 
+    // --- ALL CATEGORIES ---
     const HABIT_CATEGORIES = [
-      { id: 'Fitness', name: 'Fitness', icon: Dumbbell, color: 'from-amber-500 to-red-600' },
-      { id: 'Reading', name: 'Reading', icon: BookOpen, color: 'from-blue-500 to-indigo-600' },
-      { id: 'Water', name: 'Water', icon: Droplets, color: 'from-cyan-400 to-blue-600' },
-      { id: 'Meditation', name: 'Meditation', icon: Moon, color: 'from-purple-500 to-pink-600' },
-      { id: 'Coding', name: 'Coding', icon: Code, color: 'from-emerald-400 to-teal-600' },
-      { id: 'Language', name: 'Language', icon: Globe, color: 'from-yellow-400 to-orange-600' }
+      { id: 'Fitness', name: 'Fitness', icon: Dumbbell, color: 'from-amber-500 to-red-600', textCol: 'text-amber-400', stat: 'Strength' },
+      { id: 'Reading', name: 'Reading', icon: BookOpen, color: 'from-blue-500 to-indigo-600', textCol: 'text-blue-400', stat: 'Knowledge' },
+      { id: 'Water', name: 'Water', icon: Droplets, color: 'from-cyan-400 to-blue-600', textCol: 'text-cyan-400', stat: 'Discipline' },
+      { id: 'Meditation', name: 'Meditation', icon: Moon, color: 'from-purple-500 to-pink-600', textCol: 'text-purple-400', stat: 'Focus' },
+      { id: 'Coding', name: 'Coding', icon: Code, color: 'from-emerald-400 to-teal-600', textCol: 'text-emerald-400', stat: 'Focus' },
+      { id: 'Language', name: 'Language', icon: Globe, color: 'from-yellow-400 to-orange-600', textCol: 'text-yellow-400', stat: 'Knowledge' }
+    ];
+
+    const STREAK_MILESTONES = [3, 7, 15, 21, 30, 40];
+
+    // --- ALL ORIGINAL REWARDS, WEAPONS, PETS & ARTIFACTS ---
+    const REWARDS_MASTER = [
+      // 3-Day (Common)
+      { id: 'wooden_sword', name: 'Wooden Sword', rarity: 'Common', type: 'weapon', streakReq: 3, category: 'Fitness', stats: { strength: 5 }, desc: 'A basic training sword carved from oak.', icon: '⚔️' },
+      { id: 'traveler_boots', name: 'Traveler Boots', rarity: 'Common', type: 'armor', streakReq: 3, category: 'Language', stats: { focus: 4 }, desc: 'Comfortable footwear for long journeys.', icon: '🥾' },
+      { id: 'apprentice_scroll', name: 'Apprentice Scroll', rarity: 'Common', type: 'artifact', streakReq: 3, category: 'Reading', stats: { knowledge: 5 }, desc: 'Contains foundational magical wisdom.', icon: '📜' },
+      { id: 'zen_pebble', name: 'Zen Pebble', rarity: 'Common', type: 'artifact', streakReq: 3, category: 'Meditation', stats: { discipline: 4 }, desc: 'Smooth river stone that grounds your mind.', icon: '🪨' },
+
+      // 7-Day (Rare)
+      { id: 'iron_armor', name: 'Iron Armor', rarity: 'Rare', type: 'armor', streakReq: 7, category: 'Fitness', stats: { strength: 12, discipline: 5 }, desc: 'Forged in dragonfire to withstand harsh battles.', icon: '🛡️' },
+      { id: 'hunter_bow', name: 'Hunter Bow', rarity: 'Rare', type: 'weapon', streakReq: 7, category: 'Language', stats: { focus: 10, knowledge: 6 }, desc: 'Finely strung bow crafted from ancient yew.', icon: '🏹' },
+      { id: 'knowledge_tome', name: 'Knowledge Tome', rarity: 'Rare', type: 'artifact', streakReq: 7, category: 'Reading', stats: { knowledge: 15 }, desc: 'Bound in dark leather with glowing golden runes.', icon: '📖' },
+      { id: 'trident_spear', name: 'Trident Spear', rarity: 'Rare', type: 'weapon', streakReq: 7, category: 'Water', stats: { strength: 8, discipline: 8 }, desc: 'Imbued with ocean tides and crisp waves.', icon: '🔱' },
+
+      // 15-Day (Epic)
+      { id: 'shadow_blade', name: 'Shadow Blade', rarity: 'Epic', type: 'weapon', streakReq: 15, category: 'Fitness', stats: { strength: 25, focus: 10 }, desc: 'Forged from dark darksteel that slices through shadows.', icon: '🗡️' },
+      { id: 'arcane_robe', name: 'Arcane Robe', rarity: 'Epic', type: 'armor', streakReq: 15, category: 'Reading', stats: { knowledge: 22, focus: 12 }, desc: 'Woven with enchanted silk that hums with arcane energy.', icon: '🥋' },
+      { id: 'crystal_shield', name: 'Crystal Shield', rarity: 'Epic', type: 'armor', streakReq: 15, category: 'Water', stats: { discipline: 20, strength: 12 }, desc: 'Reflects incoming distractions like pristine ice.', icon: '🛡️' },
+      { id: 'quantum_blade', name: 'Quantum Blade', rarity: 'Epic', type: 'weapon', streakReq: 15, category: 'Coding', stats: { focus: 28 }, desc: 'Cuts through syntax bugs and logic anomalies.', icon: '⚡' },
+
+      // 21-Day (Epic Pet / Companion)
+      { id: 'wolf_companion', name: 'Wolf Companion', rarity: 'Epic', type: 'pet', streakReq: 21, category: 'Fitness', stats: { strength: 18, discipline: 15 }, desc: 'A loyal silver wolf that runs beside you.', icon: '🐺' },
+      { id: 'phoenix_hatchling', name: 'Phoenix Hatchling', rarity: 'Epic', type: 'pet', streakReq: 21, category: 'Reading', stats: { knowledge: 20, focus: 15 }, desc: 'Reborn from ashes, inspiring eternal learning.', icon: '🦅' },
+      { id: 'ocean_dragon', name: 'Ocean Dragon', rarity: 'Epic', type: 'pet', streakReq: 21, category: 'Water', stats: { discipline: 25 }, desc: 'Serene aquatic dragon that guides water habits.', icon: '🐲' },
+      { id: 'lotus_fox', name: 'Lotus Spirit Fox', rarity: 'Epic', type: 'pet', streakReq: 21, category: 'Meditation', stats: { focus: 25, discipline: 10 }, desc: 'A glowing spirit fox that grants inner calmness.', icon: '🦊' },
+
+      // 30-Day (Legendary)
+      { id: 'excalibur', name: 'Excalibur', rarity: 'Legendary', type: 'weapon', streakReq: 30, category: 'Fitness', stats: { strength: 45, discipline: 20 }, desc: 'The legendary blade of kings, shining with pure light.', icon: '🗡️✨' },
+      { id: 'frost_reaper', name: 'Frost Reaper', rarity: 'Legendary', type: 'weapon', streakReq: 30, category: 'Water', stats: { strength: 35, discipline: 25 }, desc: 'Freezes bad habits and solidifies flawless streaks.', icon: '🌾❄️' },
+      { id: 'staff_eternity', name: 'Staff of Eternity', rarity: 'Legendary', type: 'weapon', streakReq: 30, category: 'Reading', stats: { knowledge: 50 }, desc: 'Channels cosmic knowledge into unstoppable focus.', icon: '🪄🌟' },
+      { id: 'robo_owl', name: 'Robo Owl Pet', rarity: 'Legendary', type: 'pet', streakReq: 30, category: 'Coding', stats: { focus: 35, knowledge: 20 }, desc: 'Autonomous companion optimizing your cognitive workflows.', icon: '🤖🦉' },
+
+      // 40-Day (Mythic)
+      { id: 'celestial_dragon', name: 'Celestial Dragon', rarity: 'Mythic', type: 'pet', streakReq: 40, category: 'General', stats: { strength: 30, focus: 30, knowledge: 30, discipline: 30 }, desc: 'A mythical cosmic beast embodying supreme habit mastery.', icon: '🐲✨' },
+      { id: 'titan_armor', name: 'Titan Armor Set', rarity: 'Mythic', type: 'armor', streakReq: 40, category: 'Fitness', stats: { strength: 60, discipline: 40 }, desc: 'Forged from star core metal. Unshakeable and divine.', icon: '🛡️👑' },
+      { id: 'castle_skin', name: 'Legendary Castle Skin', rarity: 'Mythic', type: 'artifact', streakReq: 40, category: 'General', stats: { discipline: 50 }, desc: 'Transforms your domain into a sprawling floating citadel.', icon: '🏰' }
     ];
 
     const GET_RANK_TITLE = (streak) => {
@@ -162,6 +223,15 @@
       return { title: 'Recruit', color: 'from-slate-500 to-slate-600' };
     };
 
+    const RARITY_COLORS = {
+      Common: { text: 'text-slate-300', border: 'border-slate-600', bg: 'bg-slate-800/80' },
+      Rare: { text: 'text-blue-400', border: 'border-blue-500', bg: 'bg-blue-950/80' },
+      Epic: { text: 'text-purple-400', border: 'border-purple-500', bg: 'bg-purple-950/80' },
+      Legendary: { text: 'text-amber-400', border: 'border-amber-500', bg: 'bg-amber-950/80' },
+      Mythic: { text: 'text-rose-400 border-rose-500', border: 'border-rose-500', bg: 'bg-rose-950/80' }
+    };
+
+    // --- MAIN APP COMPONENT ---
     function App() {
       const [activeTab, setActiveTab] = useState('dashboard');
       const [soundEnabled, setSoundEnabled] = useState(true);
@@ -176,7 +246,15 @@
           xpMax: 100,
           gold: 0,
           totalStreak: 0,
-          lastActiveDate: new Date().toISOString().split('T')[0]
+          lastActiveDate: new Date().toISOString().split('T')[0],
+          unlockedItemIds: [],
+          equipped: {
+            weapon: null,
+            armor: null,
+            helmet: null,
+            pet: null,
+            artifact: null
+          }
         };
       });
 
@@ -188,16 +266,18 @@
       const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
       const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
       const [editingHabit, setEditingHabit] = useState(null);
+      const [lootModalItem, setLootModalItem] = useState(null);
       const [levelUpModal, setLevelUpModal] = useState(null);
+      const [selectedCalendarDay, setSelectedCalendarDay] = useState(null);
+      const [selectedInventoryItem, setSelectedInventoryItem] = useState(null);
       const [currentTime, setCurrentTime] = useState(new Date());
 
-      // --- AUTOMATIC CHECK FOR MISSED DAYS ON LOAD/NEW DAY ---
+      // Check daily roll-over and missed task penalty on mount
       useEffect(() => {
         const todayStr = new Date().toISOString().split('T')[0];
         const lastActive = user.lastActiveDate || todayStr;
 
         if (lastActive !== todayStr) {
-          // If a day was skipped or incomplete yesterday, enforce 0 XP penalty
           const anyHabitMissed = habits.some(h => !h.completedToday);
 
           if (anyHabitMissed && habits.length > 0) {
@@ -216,7 +296,6 @@
               }))
             );
           } else {
-            // Simply reset daily completion flags for the new day
             setHabits(prevHabits =>
               prevHabits.map(h => ({ ...h, completedToday: false }))
             );
@@ -246,17 +325,30 @@
         return () => clearInterval(timer);
       }, []);
 
-      // Base stats scale dynamically with level and current consistency
+      // Calculate character stats based on equipped items & level
       const characterStats = useMemo(() => {
-        const factor = user.xp > 0 ? user.totalStreak : 0;
-        return {
-          strength: 10 + user.level * 2 + factor,
-          knowledge: 10 + user.level * 2 + factor,
-          focus: 10 + user.level * 2 + factor,
-          discipline: 10 + user.level * 2 + (user.xp > 0 ? user.totalStreak * 2 : 0)
+        let base = {
+          discipline: 10 + user.level * 2,
+          focus: 10 + user.level * 2,
+          strength: 10 + user.level * 2,
+          knowledge: 10 + user.level * 2
         };
-      }, [user.level, user.totalStreak, user.xp]);
 
+        Object.values(user.equipped).forEach(itemId => {
+          if (!itemId) return;
+          const item = REWARDS_MASTER.find(r => r.id === itemId);
+          if (item && item.stats) {
+            Object.entries(item.stats).forEach(([statKey, val]) => {
+              if (base[statKey] !== undefined) {
+                base[statKey] += val;
+              }
+            });
+          }
+        });
+        return base;
+      }, [user.equipped, user.level]);
+
+      // Complete quest: accrues XP, handles level up, unlocks loot
       const handleCompleteQuest = (habitId) => {
         const targetHabit = habits.find(h => h.id === habitId);
         if (!targetHabit || targetHabit.completedToday) return;
@@ -282,6 +374,14 @@
 
         playSound('complete', soundEnabled);
 
+        let newlyUnlockedItem = null;
+        const availableRewards = REWARDS_MASTER.filter(
+          r => r.streakReq <= nextStreak && !user.unlockedItemIds.includes(r.id)
+        );
+        if (availableRewards.length > 0) {
+          newlyUnlockedItem = availableRewards[0];
+        }
+
         setUser(prevUser => {
           let currentXp = Number(prevUser.xp || 0) + xpToAdd;
           let currentLevel = Number(prevUser.level || 1);
@@ -302,6 +402,10 @@
             }, 300);
           }
 
+          const updatedUnlocked = newlyUnlockedItem
+            ? [...prevUser.unlockedItemIds, newlyUnlockedItem.id]
+            : prevUser.unlockedItemIds;
+
           return {
             ...prevUser,
             level: currentLevel,
@@ -309,9 +413,17 @@
             xpMax: currentXpMax,
             gold: Number(prevUser.gold || 0) + goldToAdd,
             totalStreak: Math.max(Number(prevUser.totalStreak || 0), nextStreak),
-            lastActiveDate: todayStr
+            lastActiveDate: todayStr,
+            unlockedItemIds: updatedUnlocked
           };
         });
+
+        if (newlyUnlockedItem) {
+          setTimeout(() => {
+            playSound('loot', soundEnabled);
+            setLootModalItem(newlyUnlockedItem);
+          }, 600);
+        }
       };
 
       const handleSaveHabit = (newHabitData) => {
@@ -333,7 +445,7 @@
         setIsCreateModalOpen(false);
       };
 
-      // --- RULE: DELETING A HABIT PENALIZES ALL XP & ACTIVE STREAKS TO ZERO ---
+      // Deleting a habit penalties XP and streaks to zero
       const handleDeleteHabit = (id) => {
         if (window.confirm("⚠️ PENALTY WARNING:\nDeleting a habit breaks consistency. Doing so will turn your XP and streaks back to ZERO!\n\nProceed?")) {
           setHabits(prev => prev.filter(h => h.id !== id).map(h => ({ ...h, currentStreak: 0 })));
@@ -346,9 +458,9 @@
         }
       };
 
-      // --- PHOENIX REBIRTH (MANUAL PENALTY RESET FOR FAILED TASKS) ---
+      // Phoenix Rebirth: manual penalty reset
       const handlePhoenixRebirth = () => {
-        if (window.confirm("🔥 INITIATE PHOENIX REBIRTH?\n\nThis will purge all accrued daily XP and reset active streaks back to ZERO for missed or failed goals, allowing you to rise from the ashes fresh today!")) {
+        if (window.confirm("🔥 INITIATE PHOENIX REBIRTH?\n\nThis will purge all accrued daily XP and reset active streaks back to ZERO for missed or failed goals!")) {
           playSound('rebirth', soundEnabled);
           setUser(prev => ({
             ...prev,
@@ -370,12 +482,37 @@
         playSound('click', soundEnabled);
       };
 
+      const handleEquipItem = (item) => {
+        playSound('click', soundEnabled);
+        setUser(prev => ({
+          ...prev,
+          equipped: {
+            ...prev.equipped,
+            [item.type]: prev.equipped[item.type] === item.id ? null : item.id
+          }
+        }));
+      };
+
+      const handleResetData = () => {
+        if (window.confirm("Reset all QuestForge progress and start fresh?")) {
+          localStorage.removeItem('questforge_user');
+          localStorage.removeItem('questforge_habits');
+          window.location.reload();
+        }
+      };
+
       const formattedDate = currentTime.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
       const formattedTime = currentTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
       const currentRank = GET_RANK_TITLE(user.totalStreak);
 
       return (
         <div className="min-h-screen bg-[#0E1117] text-slate-100 font-sans selection:bg-amber-500 selection:text-slate-900 pb-20 md:pb-6">
+          <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+            <div className="absolute -top-40 -left-40 w-96 h-96 bg-purple-900/20 rounded-full blur-3xl"></div>
+            <div className="absolute top-1/3 -right-40 w-96 h-96 bg-amber-600/15 rounded-full blur-3xl"></div>
+            <div className="absolute -bottom-40 left-1/3 w-96 h-96 bg-emerald-900/15 rounded-full blur-3xl"></div>
+          </div>
+
           <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
 
             {/* TOP HEADER BAR */}
@@ -396,7 +533,7 @@
                 </div>
               </div>
 
-              {/* QUICK STATS & PHOENIX REBIRTH ACTION */}
+              {/* QUICK STATS & PHOENIX REBIRTH */}
               <div className="flex items-center gap-3 sm:gap-4 overflow-x-auto py-1">
                 <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-800/80 border border-slate-700/60">
                   <span className="text-xs text-slate-400">Level</span>
@@ -421,11 +558,10 @@
                   <span className="font-extrabold text-amber-400">{user.totalStreak} Days</span>
                 </div>
 
-                {/* PHOENIX REBIRTH BUTTON */}
                 <button
                   onClick={handlePhoenixRebirth}
                   className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 text-slate-950 font-black text-xs shadow-lg shadow-rose-500/20 transition active:scale-95"
-                  title="Phoenix Rebirth: Burn XP & Streaks back to 0 for missed tasks"
+                  title="Phoenix Rebirth: Burn XP & Streaks to 0 for missed tasks"
                 >
                   <span>🦅</span>
                   <span className="hidden sm:inline">Phoenix Rebirth</span>
@@ -438,25 +574,41 @@
                 >
                   {soundEnabled ? <Volume2 className="w-4 h-4 text-amber-400" /> : <VolumeX className="w-4 h-4 text-slate-500" />}
                 </button>
+
+                <button
+                  onClick={handleResetData}
+                  className="p-2 rounded-xl bg-slate-800 hover:bg-rose-950/50 text-slate-400 hover:text-rose-400 border border-slate-700 transition"
+                  title="Reset Demo Data"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                </button>
               </div>
             </header>
 
-            {/* NAVIGATION TABS */}
+            {/* ALL 8 NAVIGATION TABS */}
             <nav className="flex items-center gap-1 overflow-x-auto p-1.5 rounded-2xl bg-slate-900/90 border border-slate-800 backdrop-blur-md mb-6 shadow-inner scrollbar-none">
               {[
                 { id: 'dashboard', label: 'Dashboard', icon: Compass },
                 { id: 'quests', label: 'Habit Quests', icon: Sword },
-                { id: 'character', label: 'Character', icon: User }
+                { id: 'calendar', label: 'Calendar View', icon: Calendar },
+                { id: 'character', label: 'Character', icon: User },
+                { id: 'inventory', label: 'Inventory', icon: Package },
+                { id: 'progress', label: 'Progress Center', icon: Trophy },
+                { id: 'reminders', label: 'Reminders', icon: Bell },
+                { id: 'analytics', label: 'Analytics', icon: BarChart2 }
               ].map(tab => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.id;
                 return (
                   <button
                     key={tab.id}
-                    onClick={() => { playSound('click', soundEnabled); setActiveTab(tab.id); }}
+                    onClick={() => {
+                      playSound('click', soundEnabled);
+                      setActiveTab(tab.id);
+                    }}
                     className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-xs sm:text-sm whitespace-nowrap transition-all duration-200 ${
                       isActive
-                        ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-bold shadow-md'
+                        ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-bold shadow-md shadow-amber-500/20 scale-[1.02]'
                         : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
                     }`}
                   >
@@ -467,7 +619,7 @@
               })}
             </nav>
 
-            {/* MAIN CONTENT */}
+            {/* ACTIVE TAB VIEWS */}
             <main className="space-y-6">
               {activeTab === 'dashboard' && (
                 <DashboardView
@@ -480,6 +632,7 @@
                   onPhoenixRebirth={handlePhoenixRebirth}
                   onOpenCreate={() => setIsCreateModalOpen(true)}
                   onOpenEditProfile={() => setIsEditProfileOpen(true)}
+                  setActiveTab={setActiveTab}
                 />
               )}
 
@@ -493,6 +646,13 @@
                 />
               )}
 
+              {activeTab === 'calendar' && (
+                <CalendarView
+                  habits={habits}
+                  onSelectDay={(dayData) => setSelectedCalendarDay(dayData)}
+                />
+              )}
+
               {activeTab === 'character' && (
                 <CharacterView
                   user={user}
@@ -501,10 +661,68 @@
                   onOpenEditProfile={() => setIsEditProfileOpen(true)}
                 />
               )}
+
+              {activeTab === 'inventory' && (
+                <InventoryView
+                  user={user}
+                  onEquip={handleEquipItem}
+                  onInspectItem={(item) => setSelectedInventoryItem(item)}
+                />
+              )}
+
+              {activeTab === 'progress' && (
+                <ProgressCenterView
+                  habits={habits}
+                  unlockedItemIds={user.unlockedItemIds}
+                />
+              )}
+
+              {activeTab === 'reminders' && (
+                <ReminderCenterView
+                  habits={habits}
+                  onComplete={handleCompleteQuest}
+                />
+              )}
+
+              {activeTab === 'analytics' && (
+                <AnalyticsView
+                  habits={habits}
+                  user={user}
+                />
+              )}
             </main>
           </div>
 
-          {/* MODALS */}
+          {/* MOBILE BOTTOM NAV */}
+          <div className="fixed bottom-0 left-0 right-0 md:hidden bg-slate-950/95 border-t border-slate-800 p-2 z-40 backdrop-blur-lg flex justify-around items-center">
+            {[
+              { id: 'dashboard', label: 'Dash', icon: Compass },
+              { id: 'quests', label: 'Quests', icon: Sword },
+              { id: 'calendar', label: 'Calendar', icon: Calendar },
+              { id: 'character', label: 'Hero', icon: User },
+              { id: 'inventory', label: 'Loot', icon: Package }
+            ].map(tab => {
+              const Icon = tab.icon;
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => {
+                    playSound('click', soundEnabled);
+                    setActiveTab(tab.id);
+                  }}
+                  className={`flex flex-col items-center gap-1 p-2 rounded-xl transition ${
+                    isActive ? 'text-amber-400 font-bold' : 'text-slate-500'
+                  }`}
+                >
+                  <Icon className="w-5 h-5" />
+                  <span className="text-[10px]">{tab.label}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* ALL MODALS */}
           {isCreateModalOpen && (
             <CreateHabitModal
               habitToEdit={editingHabit}
@@ -521,10 +739,41 @@
             />
           )}
 
+          {lootModalItem && (
+            <LootRevealModal
+              item={lootModalItem}
+              onClose={() => setLootModalItem(null)}
+              onEquip={() => {
+                handleEquipItem(lootModalItem);
+                setLootModalItem(null);
+              }}
+            />
+          )}
+
           {levelUpModal && (
             <LevelUpModal
               level={levelUpModal}
               onClose={() => setLevelUpModal(null)}
+            />
+          )}
+
+          {selectedCalendarDay && (
+            <CalendarDayDetailModal
+              dayData={selectedCalendarDay}
+              onClose={() => setSelectedCalendarDay(null)}
+            />
+          )}
+
+          {selectedInventoryItem && (
+            <ItemDetailModal
+              item={selectedInventoryItem}
+              isEquipped={Object.values(user.equipped).includes(selectedInventoryItem.id)}
+              isUnlocked={user.unlockedItemIds.includes(selectedInventoryItem.id)}
+              onEquip={() => {
+                handleEquipItem(selectedInventoryItem);
+                setSelectedInventoryItem(null);
+              }}
+              onClose={() => setSelectedInventoryItem(null)}
             />
           )}
         </div>
@@ -532,35 +781,48 @@
     }
 
     // ==========================================
-    // DASHBOARD VIEW
+    // PAGE 1: DASHBOARD VIEW
     // ==========================================
-    function DashboardView({ user, habits, currentRank, characterStats, onComplete, onDelete, onPhoenixRebirth, onOpenCreate, onOpenEditProfile }) {
+    function DashboardView({ user, habits, currentRank, characterStats, onComplete, onDelete, onPhoenixRebirth, onOpenCreate, onOpenEditProfile, setActiveTab }) {
       const activeQuests = habits.filter(h => !h.completedToday);
       const completedTodayList = habits.filter(h => h.completedToday);
+      const completionRate = habits.length ? Math.round((completedTodayList.length / habits.length) * 100) : 0;
+
+      const weeklyStats = [
+        { day: 'Mon', completed: 85 },
+        { day: 'Tue', completed: 100 },
+        { day: 'Wed', completed: 70 },
+        { day: 'Thu', completed: 90 },
+        { day: 'Fri', completed: completionRate },
+        { day: 'Sat', completed: 60 },
+        { day: 'Sun', completed: 75 }
+      ];
+
+      const petItem = REWARDS_MASTER.find(r => r.id === user.equipped.pet);
 
       return (
         <div className="space-y-6">
-          {/* HERO CARD */}
+          {/* HERO CARD OVERVIEW */}
           <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-slate-900/90 to-purple-950/40 border border-amber-500/30 p-6 shadow-2xl">
+            <div className="absolute top-0 right-0 w-80 h-80 bg-gradient-to-br from-amber-500/10 to-purple-600/10 rounded-full blur-2xl pointer-events-none"></div>
+
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-center">
               <div className="flex items-center gap-5">
                 <div className="relative group">
-                  <div className="w-20 h-20 rounded-2xl bg-slate-800 border-2 border-amber-400 shadow-lg shadow-amber-500/20 overflow-hidden flex items-center justify-center text-4xl">
+                  <div className="w-20 h-20 rounded-2xl bg-slate-800 border-2 border-amber-400 p-0.5 shadow-lg shadow-amber-500/20 overflow-hidden flex items-center justify-center text-4xl">
                     {user.avatar ? (
                       <img src={user.avatar} alt="Knight Avatar" className="w-full h-full object-cover" />
                     ) : (
                       <span>🛡️</span>
                     )}
                   </div>
-                  
                   <button
                     onClick={onOpenEditProfile}
                     className="absolute -top-2 -right-2 p-1.5 rounded-full bg-amber-400 text-slate-950 shadow-md hover:scale-110 transition"
-                    title="Edit Knight Name & Photo"
+                    title="Change Knight Photo & Name"
                   >
                     <Edit3 className="w-3.5 h-3.5" />
                   </button>
-
                   <div className="absolute -bottom-2 -right-2 px-2 py-0.5 rounded-full bg-amber-500 text-slate-950 font-black text-xs border border-slate-900 shadow">
                     Lvl {user.level}
                   </div>
@@ -575,7 +837,7 @@
                       {user.totalStreak}d Streak 🔥
                     </span>
                   </div>
-
+                  
                   <h2 className="text-2xl font-bold font-serif text-slate-100 flex items-center gap-2">
                     {user.name || 'Sir Questalot'}
                     <button onClick={onOpenEditProfile} className="text-slate-500 hover:text-amber-400 transition text-xs">
@@ -584,23 +846,26 @@
                   </h2>
 
                   <p className="text-xs text-slate-400 flex items-center gap-2 mt-1">
+                    <span>Pet: <strong className="text-slate-200">{petItem ? petItem.name : 'None'}</strong> {petItem?.icon}</span>
+                    <span>•</span>
                     <span>Gold: <strong className="text-amber-400">{user.gold} 🪙</strong></span>
                   </p>
                 </div>
               </div>
 
-              {/* XP PROGRESS BAR */}
+              {/* XP PROGRESS BAR & ATTRIBUTES */}
               <div className="space-y-2 lg:col-span-2">
                 <div className="flex justify-between items-center text-xs font-medium">
                   <span className="text-slate-300 flex items-center gap-1.5">
-                    <Zap className="w-4 h-4 text-amber-400" /> Experience Progress
+                    <Zap className="w-4 h-4 text-amber-400" />
+                    Experience Progress
                   </span>
                   <span className="text-amber-400 font-bold">{user.xp} / {user.xpMax} XP</span>
                 </div>
 
                 <div className="relative w-full h-4 bg-slate-950 rounded-full overflow-hidden p-0.5 border border-slate-800">
                   <div
-                    className="h-full rounded-full bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-300 transition-all duration-500"
+                    className="h-full rounded-full bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-300 transition-all duration-500 shadow-sm shadow-amber-500/50"
                     style={{ width: `${Math.min(100, Math.max(0, (user.xp / user.xpMax) * 100))}%` }}
                   ></div>
                 </div>
@@ -627,187 +892,359 @@
             </div>
           </div>
 
-          {/* ACTIVE QUESTS BOARD */}
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-bold font-serif text-slate-100 flex items-center gap-2">
-                <Sword className="w-5 h-5 text-amber-400" /> Active Daily Quests ({activeQuests.length})
-              </h3>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={onPhoenixRebirth}
-                  className="flex items-center gap-1 text-xs font-bold text-rose-400 bg-rose-950/40 hover:bg-rose-900/50 border border-rose-800/60 px-3 py-1.5 rounded-xl transition"
-                  title="Failed a quest? Reset XP & streak to 0"
-                >
-                  <span>🔥</span> Rebirth
-                </button>
-                <button
-                  onClick={onOpenCreate}
-                  className="flex items-center gap-1.5 text-xs font-bold text-slate-950 bg-amber-400 hover:bg-amber-300 px-3 py-1.5 rounded-xl transition shadow-md shadow-amber-500/20"
-                >
-                  <Plus className="w-4 h-4" /> New Quest
-                </button>
+          {/* ACTIVE QUESTS SECTION */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 space-y-4">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-bold font-serif text-slate-100 flex items-center gap-2">
+                  <Sword className="w-5 h-5 text-amber-400" />
+                  Active Daily Quests ({activeQuests.length})
+                </h3>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={onPhoenixRebirth}
+                    className="flex items-center gap-1 text-xs font-bold text-rose-400 bg-rose-950/40 hover:bg-rose-900/50 border border-rose-800/60 px-3 py-1.5 rounded-xl transition"
+                    title="Failed a quest? Reset XP & streak to 0"
+                  >
+                    <span>🔥</span> Rebirth
+                  </button>
+                  <button
+                    onClick={onOpenCreate}
+                    className="flex items-center gap-1.5 text-xs font-bold text-slate-950 bg-amber-400 hover:bg-amber-300 px-3 py-1.5 rounded-xl transition shadow-md shadow-amber-500/20"
+                  >
+                    <Plus className="w-4 h-4" />
+                    New Quest
+                  </button>
+                </div>
               </div>
-            </div>
 
-            {habits.length === 0 ? (
-              <div className="p-8 rounded-2xl bg-slate-900/60 border border-slate-800 text-center space-y-3">
-                <div className="w-12 h-12 rounded-full bg-slate-800 text-amber-400 flex items-center justify-center mx-auto text-xl">
-                  ⚔️
+              {activeQuests.length === 0 ? (
+                <div className="p-8 rounded-2xl bg-slate-900/60 border border-emerald-500/30 text-center space-y-3">
+                  <div className="w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto text-xl">
+                    ✨
+                  </div>
+                  <h4 className="font-bold text-slate-200">All Daily Quests Cleared!</h4>
+                  <p className="text-xs text-slate-400 max-w-md mx-auto">
+                    You've conquered every habit quest today. Consistency maintained!
+                  </p>
                 </div>
-                <h4 className="font-bold text-slate-200">No Active Habit Quests</h4>
-                <p className="text-xs text-slate-400 max-w-md mx-auto">
-                  Your quest board is currently empty. Click "New Quest" above to add your first habit!
-                </p>
-              </div>
-            ) : activeQuests.length === 0 ? (
-              <div className="p-8 rounded-2xl bg-slate-900/60 border border-emerald-500/30 text-center space-y-3">
-                <div className="w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto text-xl">
-                  ✨
-                </div>
-                <h4 className="font-bold text-slate-200">All Daily Quests Cleared!</h4>
-                <p className="text-xs text-slate-400">Consistency intact. Your streak and experience are preserved.</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {activeQuests.map(habit => {
-                  const catObj = HABIT_CATEGORIES.find(c => c.id === habit.category) || HABIT_CATEGORIES[0];
-                  const Icon = catObj.icon;
-                  return (
-                    <div
-                      key={habit.id}
-                      className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 hover:border-amber-500/40 transition-all shadow-lg flex flex-col justify-between space-y-3 group"
-                    >
-                      <div className="flex justify-between items-start">
-                        <div className="flex items-center gap-3">
-                          <div className={`p-2.5 rounded-xl bg-gradient-to-br ${catObj.color} text-slate-950 shadow-md`}>
-                            <Icon className="w-5 h-5" />
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {activeQuests.map(habit => {
+                    const catObj = HABIT_CATEGORIES.find(c => c.id === habit.category) || HABIT_CATEGORIES[0];
+                    const Icon = catObj.icon;
+                    return (
+                      <div
+                        key={habit.id}
+                        className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 hover:border-amber-500/40 transition-all shadow-lg flex flex-col justify-between space-y-3 group"
+                      >
+                        <div className="flex justify-between items-start">
+                          <div className="flex items-center gap-3">
+                            <div className={`p-2.5 rounded-xl bg-gradient-to-br ${catObj.color} text-slate-950 shadow-md`}>
+                              <Icon className="w-5 h-5" />
+                            </div>
+                            <div>
+                              <h4 className="font-bold text-sm text-slate-200 group-hover:text-amber-300 transition">
+                                {habit.name}
+                              </h4>
+                              <p className="text-[11px] text-slate-400">
+                                Streak: <span className="text-amber-400 font-bold">{habit.currentStreak} Days 🔥</span>
+                              </p>
+                            </div>
                           </div>
-                          <div>
-                            <h4 className="font-bold text-sm text-slate-200 group-hover:text-amber-300 transition">
-                              {habit.name}
-                            </h4>
-                            <p className="text-[11px] text-slate-400">
-                              Streak: <span className="text-amber-400 font-bold">{habit.currentStreak} Days 🔥</span>
-                            </p>
+
+                          <div className="flex items-center gap-1">
+                            <span className="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">
+                              +{habit.xpReward} XP
+                            </span>
+                            <button
+                              onClick={() => onDelete(habit.id)}
+                              className="p-1 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-950/40 transition"
+                              title="Delete Habit (Resets XP to 0)"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-1">
-                          <span className="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">
-                            +{habit.xpReward} XP
+                        <div className="flex justify-between items-center pt-2 border-t border-slate-800/80">
+                          <span className="text-xs text-slate-400 flex items-center gap-1">
+                            <Clock className="w-3.5 h-3.5 text-amber-400" />
+                            {habit.reminderTime || 'Anytime'}
                           </span>
                           <button
-                            onClick={() => onDelete(habit.id)}
-                            className="p-1 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-950/40 transition"
-                            title="Delete Habit (Warning: Clears XP to zero)"
+                            onClick={() => onComplete(habit.id)}
+                            className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 text-xs font-bold transition shadow-md shadow-emerald-500/20 active:scale-95"
                           >
-                            <Trash2 className="w-4 h-4" />
+                            <Check className="w-3.5 h-3.5" />
+                            Complete
                           </button>
                         </div>
                       </div>
+                    );
+                  })}
+                </div>
+              )}
 
-                      <div className="flex justify-between items-center pt-2 border-t border-slate-800/80">
-                        <span className="text-xs text-slate-400 flex items-center gap-1">
-                          <Clock className="w-3.5 h-3.5 text-amber-400" /> {habit.reminderTime || 'Anytime'}
-                        </span>
+              {/* COMPLETED TODAY LIST */}
+              {completedTodayList.length > 0 && (
+                <div className="pt-2">
+                  <h4 className="text-xs uppercase font-extrabold tracking-wider text-slate-400 mb-2">
+                    Completed Today ({completedTodayList.length})
+                  </h4>
+                  <div className="flex flex-wrap gap-2">
+                    {completedTodayList.map(h => (
+                      <div key={h.id} className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-950/40 border border-emerald-500/30 text-xs text-emerald-300">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                        <span>{h.name}</span>
+                        <span className="text-[10px] font-bold text-emerald-500">+{h.xpReward} XP</span>
                         <button
-                          onClick={() => onComplete(habit.id)}
-                          className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 text-xs font-bold transition shadow-md shadow-emerald-500/20 active:scale-95"
+                          onClick={() => onDelete(h.id)}
+                          className="ml-1 text-slate-500 hover:text-rose-400 transition"
+                          title="Delete Habit"
                         >
-                          <Check className="w-3.5 h-3.5" /> Complete
+                          <X className="w-3 h-3" />
                         </button>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
 
-            {/* COMPLETED TODAY LIST */}
-            {completedTodayList.length > 0 && (
-              <div className="pt-2">
-                <h4 className="text-xs uppercase font-extrabold tracking-wider text-slate-400 mb-2">
-                  Completed Today ({completedTodayList.length})
-                </h4>
-                <div className="flex flex-wrap gap-2">
-                  {completedTodayList.map(h => (
-                    <div key={h.id} className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-950/40 border border-emerald-500/30 text-xs text-emerald-300">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                      <span>{h.name}</span>
-                      <span className="text-[10px] font-bold text-emerald-500">+{h.xpReward} XP</span>
-                      <button
-                        onClick={() => onDelete(h.id)}
-                        className="ml-1 text-slate-500 hover:text-rose-400 transition"
-                        title="Delete Habit"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
+            {/* CHARTS PANEL */}
+            <div className="space-y-6">
+              <div className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-4 shadow-xl">
+                <h3 className="text-sm font-bold text-slate-200 flex items-center justify-between">
+                  <span className="flex items-center gap-2">
+                    <BarChart2 className="w-4 h-4 text-amber-400" />
+                    Weekly Completion
+                  </span>
+                  <span className="text-xs text-amber-400 font-bold">{completionRate}% Today</span>
+                </h3>
+
+                <div className="flex items-end justify-between gap-2 h-32 pt-4 border-b border-slate-800 pb-2">
+                  {weeklyStats.map((item, idx) => (
+                    <div key={idx} className="flex-1 flex flex-col items-center gap-1 h-full justify-end">
+                      <div
+                        className="w-full bg-gradient-to-t from-amber-600 to-amber-400 rounded-t-md transition-all duration-500 hover:brightness-125"
+                        style={{ height: `${item.completed}%` }}
+                        title={`${item.day}: ${item.completed}%`}
+                      ></div>
+                      <span className="text-[10px] text-slate-400 font-medium">{item.day}</span>
                     </div>
                   ))}
                 </div>
               </div>
-            )}
+
+              <div className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-4 shadow-xl">
+                <h3 className="text-sm font-bold text-slate-200 flex items-center gap-2">
+                  <PieChart className="w-4 h-4 text-purple-400" />
+                  Daily Success Breakdown
+                </h3>
+
+                <div className="flex items-center gap-4">
+                  <div className="relative w-24 h-24 flex-shrink-0">
+                    <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                      <path
+                        className="text-slate-800"
+                        strokeWidth="3.8"
+                        stroke="currentColor"
+                        fill="none"
+                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                      />
+                      <path
+                        className="text-emerald-400 transition-all duration-700"
+                        strokeDasharray={`${completionRate}, 100`}
+                        strokeWidth="3.8"
+                        strokeLinecap="round"
+                        stroke="currentColor"
+                        fill="none"
+                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                      />
+                    </svg>
+                    <div className="absolute inset-0 flex items-center justify-center font-bold text-xs text-slate-100">
+                      {completionRate}%
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5 text-xs">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+                      <span className="text-slate-300">Completed ({completedTodayList.length})</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+                      <span className="text-slate-300">Pending ({activeQuests.length})</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-slate-700"></span>
+                      <span className="text-slate-400">Total Habits ({habits.length})</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       );
     }
 
     // ==========================================
-    // HABIT QUESTS PAGE
+    // PAGE 2: HABIT QUESTS PAGE
     // ==========================================
     function HabitQuestsView({ habits, onComplete, onOpenCreate, onEdit, onDelete }) {
+      const [selectedCategory, setSelectedCategory] = useState('All');
+
+      const filteredHabits = habits.filter(
+        h => selectedCategory === 'All' || h.category === selectedCategory
+      );
+
       return (
         <div className="space-y-6">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-900/80 p-4 rounded-2xl border border-slate-800">
             <div>
               <h2 className="text-xl font-bold font-serif text-slate-100 flex items-center gap-2">
-                <Sword className="w-5 h-5 text-amber-400" /> Habit Quests Board
+                <Sword className="w-5 h-5 text-amber-400" />
+                Habit Quests Board
               </h2>
-              <p className="text-xs text-slate-400">Manage daily routines. Remember: deleting active quests breaks your streak and zeroes XP.</p>
+              <p className="text-xs text-slate-400">Complete daily quests to progress streaks and unlock rare loot.</p>
             </div>
 
             <button
               onClick={onOpenCreate}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 text-slate-950 font-bold text-sm transition shadow-lg"
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 text-slate-950 font-bold text-sm transition shadow-lg shadow-amber-500/20"
             >
-              <Plus className="w-4 h-4" /> Forge New Quest
+              <Plus className="w-4 h-4" />
+              Create Habit Quest
             </button>
           </div>
 
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+            <button
+              onClick={() => setSelectedCategory('All')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition ${
+                selectedCategory === 'All'
+                  ? 'bg-amber-400 text-slate-950'
+                  : 'bg-slate-900 text-slate-400 border border-slate-800 hover:bg-slate-800'
+              }`}
+            >
+              All Quests ({habits.length})
+            </button>
+            {HABIT_CATEGORIES.map(cat => (
+              <button
+                key={cat.id}
+                onClick={() => setSelectedCategory(cat.id)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition flex items-center gap-1.5 ${
+                  selectedCategory === cat.id
+                    ? 'bg-amber-400 text-slate-950'
+                    : 'bg-slate-900 text-slate-400 border border-slate-800 hover:bg-slate-800'
+                }`}
+              >
+                <cat.icon className="w-3.5 h-3.5" />
+                <span>{cat.name}</span>
+              </button>
+            ))}
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {habits.map(habit => {
+            {filteredHabits.map(habit => {
               const catObj = HABIT_CATEGORIES.find(c => c.id === habit.category) || HABIT_CATEGORIES[0];
               const Icon = catObj.icon;
+
+              const nextMilestone = STREAK_MILESTONES.find(m => m > habit.currentStreak) || 40;
+              const targetReward = REWARDS_MASTER.find(r => r.streakReq === nextMilestone && (r.category === habit.category || r.category === 'General')) || REWARDS_MASTER[0];
+              const progressPercent = Math.min(100, (habit.currentStreak / nextMilestone) * 100);
+
               return (
-                <div key={habit.id} className="rounded-2xl bg-slate-900/90 border border-slate-800 p-5 space-y-4 shadow-xl">
-                  <div className="flex justify-between items-start">
-                    <div className="flex items-center gap-3">
-                      <div className={`p-2.5 rounded-xl bg-gradient-to-br ${catObj.color} text-slate-950`}>
-                        <Icon className="w-5 h-5" />
+                <div
+                  key={habit.id}
+                  className={`relative overflow-hidden rounded-2xl bg-slate-900/90 border p-5 shadow-xl flex flex-col justify-between space-y-4 transition-all duration-300 hover:border-amber-500/50 ${
+                    habit.completedToday ? 'border-emerald-500/40 bg-slate-900/50' : 'border-slate-800'
+                  }`}
+                >
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-start">
+                      <div className="flex items-center gap-3">
+                        <div className={`p-2.5 rounded-xl bg-gradient-to-br ${catObj.color} text-slate-950 shadow-md`}>
+                          <Icon className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <span className="text-[10px] uppercase font-extrabold tracking-wider text-slate-400">
+                            {habit.category} Quest
+                          </span>
+                          <h3 className="font-bold text-base text-slate-100 flex items-center gap-2">
+                            {habit.name}
+                          </h3>
+                        </div>
                       </div>
-                      <div>
-                        <span className="text-[10px] uppercase font-bold text-slate-400">{habit.category}</span>
-                        <h3 className="font-bold text-base text-slate-100">{habit.name}</h3>
+
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => onEdit(habit)}
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-amber-400 hover:bg-slate-800 transition"
+                          title="Edit Quest"
+                        >
+                          <Edit3 className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => onDelete(habit.id)}
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition"
+                          title="Delete Quest"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
                       </div>
                     </div>
-                    <div className="flex gap-1">
-                      <button onClick={() => onEdit(habit)} className="p-1.5 rounded-lg text-slate-400 hover:text-amber-400">
-                        <Edit3 className="w-4 h-4" />
-                      </button>
-                      <button onClick={() => onDelete(habit.id)} className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400">
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+
+                    <div className="flex items-center justify-between bg-slate-950/60 p-2.5 rounded-xl border border-slate-800">
+                      <div className="flex items-center gap-1.5">
+                        <Flame className="w-4 h-4 text-amber-400 animate-pulse" />
+                        <span className="text-xs text-slate-300">Streak:</span>
+                        <span className="text-xs font-bold text-amber-400">{habit.currentStreak} Days</span>
+                      </div>
+                      <span className="text-[10px] px-2 py-0.5 rounded bg-purple-950 text-purple-300 border border-purple-800 font-bold">
+                        +{habit.xpReward} XP
+                      </span>
+                    </div>
+
+                    <div className="text-xs space-y-1.5 pt-1">
+                      <div className="flex justify-between text-[11px] text-slate-400">
+                        <span>Target Reward at {nextMilestone} Days:</span>
+                        <span className="text-amber-300 font-semibold">{targetReward.name} {targetReward.icon}</span>
+                      </div>
+
+                      <div className="w-full h-2.5 bg-slate-950 rounded-full overflow-hidden p-0.5 border border-slate-800">
+                        <div
+                          className="h-full bg-gradient-to-r from-amber-500 to-amber-300 rounded-full transition-all duration-500"
+                          style={{ width: `${progressPercent}%` }}
+                        ></div>
+                      </div>
+                      <div className="flex justify-between text-[10px] text-slate-500">
+                        <span>{habit.currentStreak} Days</span>
+                        <span>{nextMilestone} Days</span>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="flex justify-between items-center pt-2 border-t border-slate-800">
-                    <span className="text-xs text-amber-400 font-bold">{habit.currentStreak} Days Streak 🔥</span>
+                  <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between">
+                    <span className="text-xs text-slate-400 flex items-center gap-1">
+                      <Clock className="w-3.5 h-3.5 text-slate-500" />
+                      {habit.reminderTime || 'Daily'}
+                    </span>
+
                     {habit.completedToday ? (
-                      <span className="text-xs text-emerald-400 font-bold">Done Today ✅</span>
+                      <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-950/80 text-emerald-400 text-xs font-bold border border-emerald-500/40">
+                        <CheckCircle2 className="w-4 h-4" />
+                        Completed Today
+                      </span>
                     ) : (
-                      <button onClick={() => onComplete(habit.id)} className="px-3 py-1.5 rounded-xl bg-emerald-500 text-slate-950 text-xs font-bold">
-                        Complete
+                      <button
+                        onClick={() => onComplete(habit.id)}
+                        className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-bold text-xs transition shadow-md shadow-emerald-500/20 active:scale-95"
+                      >
+                        <Check className="w-4 h-4" />
+                        Complete Quest
                       </button>
                     )}
                   </div>
@@ -820,52 +1257,565 @@
     }
 
     // ==========================================
-    // CHARACTER VIEW
+    // PAGE 3: CALENDAR VIEW
     // ==========================================
-    function CharacterView({ user, characterStats, currentRank, onOpenEditProfile }) {
+    function CalendarView({ habits, onSelectDay }) {
+      const [currentMonth, setCurrentMonth] = useState(new Date(2026, 8, 1)); // September 2026
+
+      const daysInMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0).getDate();
+      const firstDayOfWeek = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1).getDay();
+      const monthName = currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+      const calendarDays = useMemo(() => {
+        const days = [];
+        const year = currentMonth.getFullYear();
+        const month = (currentMonth.getMonth() + 1).toString().padStart(2, '0');
+
+        for (let d = 1; d <= daysInMonth; d++) {
+          const dayStr = `${year}-${month}-${d.toString().padStart(2, '0')}`;
+          const completedOnDay = habits.filter(h => (h.history || []).includes(dayStr));
+          const count = completedOnDay.length;
+
+          let status = 'none';
+          if (count === habits.length && habits.length > 0) {
+            status = 'completed';
+          } else if (count > 0) {
+            status = 'streak';
+          }
+
+          const isRewardDay = d % 7 === 0;
+
+          days.push({
+            dateNumber: d,
+            dateStr: dayStr,
+            completedCount: count,
+            totalHabits: habits.length,
+            status,
+            isRewardDay,
+            completedQuests: completedOnDay
+          });
+        }
+        return days;
+      }, [currentMonth, habits, daysInMonth]);
+
       return (
-        <div className="p-8 rounded-3xl bg-slate-900/80 border border-slate-800 text-center space-y-6 max-w-lg mx-auto shadow-2xl">
-          <div className="relative w-28 h-28 mx-auto rounded-3xl bg-slate-950 border-2 border-amber-400 shadow-xl overflow-hidden flex items-center justify-center text-6xl">
-            {user.avatar ? (
-              <img src={user.avatar} alt="Knight Avatar" className="w-full h-full object-cover" />
-            ) : (
-              <span>🛡️</span>
-            )}
-            <button
-              onClick={onOpenEditProfile}
-              className="absolute bottom-1 right-1 p-2 rounded-full bg-amber-400 text-slate-950 shadow hover:scale-110 transition"
-              title="Change Photo"
-            >
-              <Camera className="w-4 h-4" />
-            </button>
-          </div>
+        <div className="space-y-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-900/80 p-5 rounded-2xl border border-slate-800">
+            <div>
+              <h2 className="text-xl font-bold font-serif text-slate-100 flex items-center gap-2">
+                <Calendar className="w-5 h-5 text-amber-400" />
+                RPG Monthly Quest Log
+              </h2>
+              <p className="text-xs text-slate-400">Track daily consistency across the calendar.</p>
+            </div>
 
-          <div>
-            <span className={`text-xs uppercase font-extrabold tracking-widest bg-gradient-to-r ${currentRank.color} bg-clip-text text-transparent`}>
-              {currentRank.title} Rank
-            </span>
-            <h3 className="text-3xl font-bold font-serif text-slate-100 mt-1 flex items-center justify-center gap-2">
-              {user.name || 'Sir Questalot'}
-              <button onClick={onOpenEditProfile} className="text-slate-500 hover:text-amber-400">
-                <Edit3 className="w-5 h-5" />
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1))}
+                className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition"
+              >
+                ‹
               </button>
-            </h3>
-            <p className="text-xs text-amber-400 font-bold mt-1">Level {user.level} Knight • {user.totalStreak} Days Streak 🔥</p>
+              <span className="text-sm font-bold text-amber-300 font-serif min-w-[120px] text-center">
+                {monthName}
+              </span>
+              <button
+                onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1))}
+                className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition"
+              >
+                ›
+              </button>
+            </div>
           </div>
 
-          <button
-            onClick={onOpenEditProfile}
-            className="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-400 font-bold text-xs border border-slate-700 transition"
-          >
-            Edit Knight Name & Avatar Photo
-          </button>
+          <div className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-xl">
+            <div className="grid grid-cols-7 gap-2 text-center text-xs font-bold text-slate-400 pb-3 border-b border-slate-800">
+              <div>Sun</div>
+              <div>Mon</div>
+              <div>Tue</div>
+              <div>Wed</div>
+              <div>Thu</div>
+              <div>Fri</div>
+              <div>Sat</div>
+            </div>
+
+            <div className="grid grid-cols-7 gap-2 pt-3">
+              {Array.from({ length: firstDayOfWeek }).map((_, idx) => (
+                <div key={`empty-${idx}`} className="h-16 sm:h-20 rounded-xl bg-slate-950/30"></div>
+              ))}
+
+              {calendarDays.map(day => (
+                <div
+                  key={day.dateStr}
+                  onClick={() => onSelectDay(day)}
+                  className={`h-16 sm:h-20 rounded-xl p-1.5 border transition cursor-pointer flex flex-col justify-between hover:scale-[1.03] ${
+                    day.status === 'completed'
+                      ? 'bg-emerald-950/40 border-emerald-500/50 hover:bg-emerald-900/50'
+                      : day.status === 'streak'
+                      ? 'bg-amber-950/40 border-amber-500/40 hover:bg-amber-900/50'
+                      : 'bg-slate-950/60 border-slate-800/80 hover:border-slate-700'
+                  }`}
+                >
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="font-bold text-slate-300">{day.dateNumber}</span>
+                    {day.isRewardDay && <span className="text-xs">🏆</span>}
+                  </div>
+
+                  <div className="text-center my-auto text-sm">
+                    {day.status === 'completed' && <span>✅</span>}
+                    {day.status === 'streak' && <span>🔥</span>}
+                  </div>
+
+                  <div className="text-[9px] text-center text-slate-400 font-mono">
+                    {day.completedCount}/{day.totalHabits} Quests
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       );
     }
 
     // ==========================================
-    // EDIT PROFILE / KNIGHT MODAL
+    // PAGE 4: CHARACTER SCREEN
     // ==========================================
+    function CharacterView({ user, characterStats, currentRank, onOpenEditProfile }) {
+      const slots = [
+        { key: 'weapon', name: 'Weapon', icon: '⚔️' },
+        { key: 'armor', name: 'Armor', icon: '🛡️' },
+        { key: 'pet', name: 'Pet / Companion', icon: '🐾' },
+        { key: 'artifact', name: 'Artifact', icon: '🔮' }
+      ];
+
+      return (
+        <div className="space-y-6">
+          <div className="bg-slate-900/80 p-5 rounded-2xl border border-slate-800 flex justify-between items-center">
+            <div>
+              <h2 className="text-xl font-bold font-serif text-slate-100 flex items-center gap-2">
+                <User className="w-5 h-5 text-amber-400" />
+                Hero Profile & Stats
+              </h2>
+              <p className="text-xs text-slate-400">Equipped loadout and attributes.</p>
+            </div>
+            <button
+              onClick={onOpenEditProfile}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-400 text-slate-950 text-xs font-bold hover:bg-amber-300 transition"
+            >
+              <Edit3 className="w-3.5 h-3.5" /> Edit Knight
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="p-6 rounded-3xl bg-gradient-to-b from-slate-900 via-slate-900 to-purple-950/50 border border-amber-500/30 text-center space-y-4 shadow-2xl relative overflow-hidden">
+              <div className="relative w-36 h-36 mx-auto rounded-3xl bg-slate-950 border-2 border-amber-400 shadow-2xl overflow-hidden flex items-center justify-center text-6xl">
+                {user.avatar ? (
+                  <img src={user.avatar} alt="Knight Avatar" className="w-full h-full object-cover" />
+                ) : (
+                  <span>🛡️</span>
+                )}
+                <button
+                  onClick={onOpenEditProfile}
+                  className="absolute bottom-1 right-1 p-2 rounded-full bg-amber-400 text-slate-950 shadow hover:scale-110 transition"
+                  title="Change Photo"
+                >
+                  <Camera className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div>
+                <span className={`text-xs uppercase font-extrabold tracking-widest bg-gradient-to-r ${currentRank.color} bg-clip-text text-transparent`}>
+                  {currentRank.title} Rank
+                </span>
+                <h3 className="text-2xl font-bold font-serif text-slate-100 mt-1">{user.name || 'Sir Questalot'}</h3>
+                <p className="text-xs text-amber-400 font-bold mt-1">Total Streak: {user.totalStreak} Days 🔥</p>
+              </div>
+
+              <div className="pt-4 border-t border-slate-800 space-y-2">
+                <h4 className="text-xs font-bold uppercase text-slate-400 tracking-wider">Equipped Loadout</h4>
+                <div className="grid grid-cols-2 gap-2">
+                  {slots.map(s => {
+                    const itemId = user.equipped[s.key];
+                    const item = REWARDS_MASTER.find(r => r.id === itemId);
+                    return (
+                      <div key={s.key} className="p-2 rounded-xl bg-slate-950/80 border border-slate-800 flex items-center gap-2 text-left">
+                        <span className="text-xl">{item ? item.icon : s.icon}</span>
+                        <div className="overflow-hidden">
+                          <div className="text-[10px] text-slate-500 capitalize">{s.name}</div>
+                          <div className="text-xs font-bold text-slate-200 truncate">{item ? item.name : 'Empty'}</div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            <div className="lg:col-span-2 space-y-6">
+              <div className="p-6 rounded-3xl bg-slate-900/90 border border-slate-800 shadow-xl space-y-6">
+                <h3 className="text-lg font-bold font-serif text-slate-100 flex items-center justify-between">
+                  <span>RPG Attributes</span>
+                  <span className="text-xs text-amber-400 font-normal">Boosted by Gear & Level</span>
+                </h3>
+
+                <div className="space-y-4">
+                  {[
+                    { label: 'Strength', val: characterStats.strength, max: 150, color: 'from-amber-500 to-red-500' },
+                    { label: 'Knowledge', val: characterStats.knowledge, max: 150, color: 'from-blue-500 to-indigo-500' },
+                    { label: 'Focus', val: characterStats.focus, max: 150, color: 'from-purple-500 to-pink-500' },
+                    { label: 'Discipline', val: characterStats.discipline, max: 150, color: 'from-emerald-400 to-teal-500' }
+                  ].map(st => (
+                    <div key={st.label} className="space-y-1.5">
+                      <div className="flex justify-between items-center text-xs">
+                        <span className="font-bold text-slate-200">{st.label}</span>
+                        <span className="font-bold text-amber-400">{st.val} / {st.max}</span>
+                      </div>
+                      <div className="w-full h-3 bg-slate-950 rounded-full overflow-hidden p-0.5 border border-slate-800">
+                        <div
+                          className={`h-full rounded-full bg-gradient-to-r ${st.color} transition-all duration-500`}
+                          style={{ width: `${Math.min(100, (st.val / st.max) * 100)}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ==========================================
+    // PAGE 5: REWARDS INVENTORY
+    // ==========================================
+    function InventoryView({ user, onEquip, onInspectItem }) {
+      const [selectedType, setSelectedType] = useState('All');
+
+      const filteredItems = REWARDS_MASTER.filter(item => {
+        if (selectedType !== 'All' && item.type !== selectedType) return false;
+        return true;
+      });
+
+      return (
+        <div className="space-y-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-900/80 p-5 rounded-2xl border border-slate-800">
+            <div>
+              <h2 className="text-xl font-bold font-serif text-slate-100 flex items-center gap-2">
+                <Package className="w-5 h-5 text-amber-400" />
+                Rewards Vault & Loot Inventory
+              </h2>
+              <p className="text-xs text-slate-400">Equip gear, pets, and weapons earned from habit streaks.</p>
+            </div>
+
+            <div className="text-xs bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800 text-slate-300">
+              Unlocked: <strong className="text-amber-400">{user.unlockedItemIds.length}</strong> / {REWARDS_MASTER.length} Items
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+            {['All', 'weapon', 'armor', 'pet', 'artifact'].map(t => (
+              <button
+                key={t}
+                onClick={() => setSelectedType(t)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold capitalize transition ${
+                  selectedType === t
+                    ? 'bg-amber-400 text-slate-950'
+                    : 'bg-slate-900 text-slate-400 border border-slate-800 hover:bg-slate-800'
+                }`}
+              >
+                {t}s
+              </button>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            {filteredItems.map(item => {
+              const isUnlocked = user.unlockedItemIds.includes(item.id);
+              const isEquipped = Object.values(user.equipped).includes(item.id);
+              const rarityStyling = RARITY_COLORS[item.rarity] || RARITY_COLORS.Common;
+
+              return (
+                <div
+                  key={item.id}
+                  onClick={() => onInspectItem(item)}
+                  className={`relative rounded-2xl p-4 border transition-all cursor-pointer flex flex-col items-center justify-between text-center space-y-3 group ${
+                    isUnlocked
+                      ? `${rarityStyling.bg} ${rarityStyling.border} shadow-lg hover:scale-105`
+                      : 'bg-slate-950/60 border-slate-800/80 opacity-60'
+                  }`}
+                >
+                  {isEquipped && (
+                    <span className="absolute top-2 right-2 px-2 py-0.5 rounded-md bg-amber-400 text-slate-950 font-black text-[9px] shadow">
+                      EQUIPPED
+                    </span>
+                  )}
+
+                  <div className="relative text-4xl py-2">
+                    {item.icon}
+                    {!isUnlocked && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-slate-950/70 rounded-full">
+                        <Lock className="w-5 h-5 text-slate-400" />
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="w-full space-y-1">
+                    <span className={`text-[10px] uppercase font-bold tracking-wider ${rarityStyling.text}`}>
+                      {item.rarity}
+                    </span>
+                    <h4 className="text-xs font-bold text-slate-200 truncate group-hover:text-amber-300">
+                      {item.name}
+                    </h4>
+                    <p className="text-[10px] text-slate-400">
+                      {isUnlocked ? `${item.category} Loot` : `Requires ${item.streakReq}-Day Streak`}
+                    </p>
+                  </div>
+
+                  {isUnlocked && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onEquip(item);
+                      }}
+                      className={`w-full py-1.5 rounded-xl text-xs font-bold transition ${
+                        isEquipped
+                          ? 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+                          : 'bg-amber-400 hover:bg-amber-300 text-slate-950 shadow-md shadow-amber-500/20'
+                      }`}
+                    >
+                      {isEquipped ? 'Unequip' : 'Equip'}
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
+
+    // ==========================================
+    // PAGE 6: PROGRESS CENTER
+    // ==========================================
+    function ProgressCenterView({ habits, unlockedItemIds }) {
+      const [selectedHabitId, setSelectedHabitId] = useState(habits[0]?.id || null);
+      const habit = habits.find(h => h.id === selectedHabitId) || habits[0];
+
+      return (
+        <div className="space-y-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-900/80 p-5 rounded-2xl border border-slate-800">
+            <div>
+              <h2 className="text-xl font-bold font-serif text-slate-100 flex items-center gap-2">
+                <Trophy className="w-5 h-5 text-amber-400" />
+                Streak Progress Timeline
+              </h2>
+              <p className="text-xs text-slate-400">Milestone unlock progression road.</p>
+            </div>
+
+            {habits.length > 0 && (
+              <select
+                value={selectedHabitId || ''}
+                onChange={(e) => setSelectedHabitId(e.target.value)}
+                className="bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded-xl px-3 py-2 font-semibold"
+              >
+                {habits.map(h => (
+                  <option key={h.id} value={h.id}>{h.name} ({h.currentStreak} Days)</option>
+                ))}
+              </select>
+            )}
+          </div>
+
+          {habit ? (
+            <div className="p-6 rounded-3xl bg-slate-900/90 border border-slate-800 shadow-2xl space-y-8">
+              <div className="flex justify-between items-center bg-slate-950/60 p-4 rounded-2xl border border-slate-800">
+                <div>
+                  <span className="text-xs text-slate-400">Active Quest Timeline</span>
+                  <h3 className="text-lg font-bold text-slate-100">{habit.name}</h3>
+                </div>
+                <div className="text-right">
+                  <span className="text-xs text-slate-400">Current Streak</span>
+                  <div className="text-xl font-extrabold text-amber-400">{habit.currentStreak} Days 🔥</div>
+                </div>
+              </div>
+
+              <div className="relative border-l-2 border-amber-500/30 pl-6 sm:pl-8 space-y-8 ml-4">
+                {STREAK_MILESTONES.map(milestone => {
+                  const rewardItem = REWARDS_MASTER.find(
+                    r => r.streakReq === milestone && (r.category === habit.category || r.category === 'General')
+                  ) || REWARDS_MASTER[0];
+
+                  const isReached = habit.currentStreak >= milestone;
+
+                  return (
+                    <div key={milestone} className="relative group">
+                      <div
+                        className={`absolute -left-[31px] sm:-left-[39px] top-1/2 -translate-y-1/2 w-8 h-8 rounded-full border-2 flex items-center justify-center font-bold text-xs ${
+                          isReached
+                            ? 'bg-amber-400 border-amber-300 text-slate-950 shadow-lg shadow-amber-500/40'
+                            : 'bg-slate-950 border-slate-700 text-slate-500'
+                        }`}
+                      >
+                        {isReached ? '✓' : milestone}
+                      </div>
+
+                      <div
+                        className={`p-4 rounded-2xl border flex items-center justify-between gap-4 ${
+                          isReached
+                            ? 'bg-slate-900 border-amber-500/40 shadow-xl'
+                            : 'bg-slate-950/40 border-slate-800/80 opacity-60'
+                        }`}
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className="text-3xl">{rewardItem.icon}</div>
+                          <div>
+                            <span className="text-xs font-extrabold text-amber-400">{milestone}-Day Milestone</span>
+                            <h5 className="font-bold text-sm text-slate-100">{rewardItem.name}</h5>
+                            <p className="text-xs text-slate-400 max-w-md">{rewardItem.desc}</p>
+                          </div>
+                        </div>
+
+                        <div>
+                          {isReached ? (
+                            <span className="px-3 py-1.5 rounded-xl bg-emerald-950 border border-emerald-500/40 text-emerald-400 text-xs font-bold flex items-center gap-1">
+                              <Check className="w-3.5 h-3.5" /> Unlocked
+                            </span>
+                          ) : (
+                            <span className="px-3 py-1.5 rounded-xl bg-slate-950 text-slate-500 text-xs font-bold border border-slate-800 flex items-center gap-1">
+                              <Lock className="w-3.5 h-3.5" /> Locked
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ) : (
+            <div className="p-8 rounded-2xl bg-slate-900/50 border border-slate-800 text-center text-xs text-slate-400">
+              Create a habit quest to view milestone paths.
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // ==========================================
+    // PAGE 7: REMINDERS CENTER
+    // ==========================================
+    function ReminderCenterView({ habits, onComplete }) {
+      return (
+        <div className="space-y-6">
+          <div className="bg-slate-900/80 p-5 rounded-2xl border border-slate-800">
+            <h2 className="text-xl font-bold font-serif text-slate-100 flex items-center gap-2">
+              <Bell className="w-5 h-5 text-amber-400" />
+              Smart Quest Reminder Center
+            </h2>
+            <p className="text-xs text-slate-400">Scheduled reminders and routines.</p>
+          </div>
+
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {habits.map(habit => (
+                <div
+                  key={habit.id}
+                  className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 flex items-center justify-between gap-4 shadow-lg"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 rounded-xl bg-slate-800 text-amber-400">
+                      <Clock className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-sm text-slate-200">{habit.name}</h4>
+                      <p className="text-xs text-slate-400">Scheduled for <strong className="text-amber-300">{habit.reminderTime || '09:00 AM'}</strong></p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    {habit.completedToday ? (
+                      <span className="text-xs text-emerald-400 font-bold">Done ✅</span>
+                    ) : (
+                      <button
+                        onClick={() => onComplete(habit.id)}
+                        className="px-3 py-1.5 rounded-xl bg-emerald-500 text-slate-950 text-xs font-bold transition hover:bg-emerald-400"
+                      >
+                        Done
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ==========================================
+    // PAGE 8: ANALYTICS
+    // ==========================================
+    function AnalyticsView({ habits, user }) {
+      const heatmapCells = useMemo(() => {
+        const cells = [];
+        for (let i = 0; i < 120; i++) {
+          const level = Math.floor(Math.random() * 4);
+          cells.push({ id: i, intensity: level });
+        }
+        return cells;
+      }, []);
+
+      return (
+        <div className="space-y-6">
+          <div className="bg-slate-900/80 p-5 rounded-2xl border border-slate-800">
+            <h2 className="text-xl font-bold font-serif text-slate-100 flex items-center gap-2">
+              <BarChart2 className="w-5 h-5 text-amber-400" />
+              Advanced RPG Habit Analytics
+            </h2>
+            <p className="text-xs text-slate-400">Consistency heatmap and rankings.</p>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 text-center space-y-1">
+              <div className="text-xs text-slate-400">Highest Streak</div>
+              <div className="text-2xl font-extrabold text-amber-400">{user.totalStreak} Days 🔥</div>
+            </div>
+            <div className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 text-center space-y-1">
+              <div className="text-xs text-slate-400">Total Gold</div>
+              <div className="text-2xl font-extrabold text-blue-400">{user.gold} 🪙</div>
+            </div>
+            <div className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 text-center space-y-1">
+              <div className="text-xs text-slate-400">Total Habits</div>
+              <div className="text-2xl font-extrabold text-emerald-400">{habits.length}</div>
+            </div>
+            <div className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 text-center space-y-1">
+              <div className="text-xs text-slate-400">Items Unlocked</div>
+              <div className="text-2xl font-extrabold text-purple-400">{user.unlockedItemIds.length}</div>
+            </div>
+          </div>
+
+          <div className="p-6 rounded-3xl bg-slate-900/90 border border-slate-800 space-y-4 shadow-xl">
+            <h3 className="text-sm font-bold text-slate-200">Consistency Activity Grid</h3>
+            <div className="flex flex-wrap gap-1.5 justify-center py-2">
+              {heatmapCells.map(cell => {
+                const colors = ['bg-slate-950 border-slate-800', 'bg-emerald-950 border-emerald-800', 'bg-emerald-700 border-emerald-600', 'bg-emerald-400 border-emerald-300'];
+                return (
+                  <div
+                    key={cell.id}
+                    className={`w-3.5 h-3.5 rounded-sm border ${colors[cell.intensity]} transition hover:scale-125`}
+                  ></div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ==========================================
+    // MODAL COMPONENTS
+    // ==========================================
+
     function EditProfileModal({ user, onSave, onClose }) {
       const [name, setName] = useState(user.name || 'Sir Questalot');
       const [avatar, setAvatar] = useState(user.avatar || null);
@@ -986,12 +1936,10 @@
       );
     }
 
-    // ==========================================
-    // CREATE/EDIT HABIT MODAL
-    // ==========================================
     function CreateHabitModal({ habitToEdit, onSave, onClose }) {
       const [name, setName] = useState(habitToEdit?.name || '');
       const [category, setCategory] = useState(habitToEdit?.category || 'Fitness');
+      const [difficulty, setDifficulty] = useState(habitToEdit?.difficulty || 'Rare');
       const [reminderTime, setReminderTime] = useState(habitToEdit?.reminderTime || '09:00');
       const [xpReward, setXpReward] = useState(habitToEdit?.xpReward || 50);
       const [goldReward, setGoldReward] = useState(habitToEdit?.goldReward || 25);
@@ -1002,6 +1950,7 @@
         onSave({
           name,
           category,
+          difficulty,
           reminderTime,
           xpReward: Number(xpReward) || 25,
           goldReward: Number(goldReward) || 10
@@ -1026,7 +1975,7 @@
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g. Read 10 Pages 📚"
+                  placeholder="e.g. Morning Workout ⚔️"
                   className="w-full bg-slate-950 border border-slate-700 text-slate-100 rounded-xl px-3 py-2.5 focus:outline-none focus:border-amber-400 text-sm"
                   required
                 />
@@ -1045,13 +1994,17 @@
                 </div>
 
                 <div>
-                  <label className="block text-slate-300 font-bold mb-1">Reminder Time</label>
-                  <input
-                    type="time"
-                    value={reminderTime}
-                    onChange={(e) => setReminderTime(e.target.value)}
+                  <label className="block text-slate-300 font-bold mb-1">Difficulty</label>
+                  <select
+                    value={difficulty}
+                    onChange={(e) => setDifficulty(e.target.value)}
                     className="w-full bg-slate-950 border border-slate-700 text-slate-100 rounded-xl px-3 py-2.5"
-                  />
+                  >
+                    <option value="Common">Common</option>
+                    <option value="Rare">Rare</option>
+                    <option value="Epic">Epic</option>
+                    <option value="Legendary">Legendary</option>
+                  </select>
                 </div>
               </div>
 
@@ -1088,19 +2041,123 @@
       );
     }
 
+    function LootRevealModal({ item, onClose, onEquip }) {
+      const rarityStyle = RARITY_COLORS[item.rarity] || RARITY_COLORS.Legendary;
+
+      return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-lg">
+          <div className={`relative w-full max-w-sm rounded-3xl ${rarityStyle.bg} border-2 ${rarityStyle.border} p-6 shadow-2xl text-center space-y-5`}>
+            <div className="text-xs uppercase tracking-widest font-extrabold text-amber-400">
+              ✨ LEGENDARY STREAK UNLOCK ✨
+            </div>
+
+            <div className="text-6xl py-4 animate-pulse">
+              {item.icon}
+            </div>
+
+            <div>
+              <span className={`text-xs uppercase font-extrabold ${rarityStyle.text}`}>{item.rarity} {item.type}</span>
+              <h3 className="text-2xl font-bold font-serif text-slate-100 mt-1">{item.name}</h3>
+              <p className="text-xs text-slate-300 mt-2">{item.desc}</p>
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                onClick={onEquip}
+                className="flex-1 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs shadow-lg"
+              >
+                Equip Now
+              </button>
+              <button
+                onClick={onClose}
+                className="py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs"
+              >
+                Vault Item
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     function LevelUpModal({ level, onClose }) {
       return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-lg">
           <div className="w-full max-w-sm rounded-3xl bg-gradient-to-b from-purple-900 to-slate-900 border-2 border-amber-400 p-6 text-center space-y-4 shadow-2xl">
             <div className="text-5xl">⚡ HERO LEVEL UP! ⚡</div>
             <h3 className="text-3xl font-extrabold text-amber-400 font-serif">Level {level}</h3>
-            <p className="text-xs text-slate-300">Your habit consistency has elevated your hero stats!</p>
+            <p className="text-xs text-slate-300">Your habit consistency has elevated your hero attributes!</p>
             <button
               onClick={onClose}
               className="w-full py-2.5 rounded-xl bg-amber-400 text-slate-950 font-bold text-xs shadow-lg"
             >
               Claim Glory
             </button>
+          </div>
+        </div>
+      );
+    }
+
+    function CalendarDayDetailModal({ dayData, onClose }) {
+      return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+          <div className="relative w-full max-w-md rounded-3xl bg-slate-900 border border-slate-700 p-6 space-y-4 shadow-2xl">
+            <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-100">
+              <X className="w-5 h-5" />
+            </button>
+
+            <h3 className="text-lg font-bold font-serif text-amber-400">
+              Quest Log for {dayData.dateStr}
+            </h3>
+
+            <div className="space-y-2 text-xs">
+              <div className="p-3 rounded-xl bg-slate-950 border border-slate-800">
+                Completed: <strong className="text-amber-300">{dayData.completedCount} / {dayData.totalHabits} Habits</strong>
+              </div>
+
+              <div className="space-y-1 pt-2">
+                <h4 className="font-bold text-slate-300">Completed Habits:</h4>
+                {dayData.completedQuests.length > 0 ? (
+                  dayData.completedQuests.map(q => (
+                    <div key={q.id} className="p-2 rounded-lg bg-emerald-950/40 border border-emerald-500/30 text-emerald-300">
+                      ✓ {q.name} (+{q.xpReward} XP)
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-slate-500 italic">No habits logged for this date.</p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function ItemDetailModal({ item, isEquipped, isUnlocked, onEquip, onClose }) {
+      return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+          <div className="relative w-full max-w-sm rounded-3xl bg-slate-900 border border-amber-500/30 p-6 space-y-4 text-center shadow-2xl">
+            <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-100">
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="text-5xl py-2">{item.icon}</div>
+            <h3 className="text-xl font-bold font-serif text-slate-100">{item.name}</h3>
+            <p className="text-xs text-amber-400 font-semibold uppercase">{item.rarity} {item.type}</p>
+            <p className="text-xs text-slate-300">{item.desc}</p>
+
+            {isUnlocked ? (
+              <button
+                onClick={onEquip}
+                className="w-full py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs shadow-lg"
+              >
+                {isEquipped ? 'Unequip Item' : 'Equip Item'}
+              </button>
+            ) : (
+              <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-400">
+                Requires {item.streakReq}-Day Habit Streak
+              </div>
+            )}
           </div>
         </div>
       );
