@@ -57,18 +57,13 @@
     const Shield = createIcon('shield');
     const Sword = createIcon('sword');
     const Flame = createIcon('flame');
-    const Sparkles = createIcon('sparkles');
+    const Dumbbell = createIcon('dumbbell');
     const BookOpen = createIcon('book-open');
     const Droplets = createIcon('droplets');
-    const Dumbbell = createIcon('dumbbell');
+    const Moon = createIcon('moon');
     const Code = createIcon('code');
     const Globe = createIcon('globe');
-    const Moon = createIcon('moon');
-    const Calendar = createIcon('calendar');
-    const BarChart2 = createIcon('bar-chart-2');
     const User = createIcon('user');
-    const Package = createIcon('package');
-    const Bell = createIcon('bell');
     const Compass = createIcon('compass');
     const Plus = createIcon('plus');
     const Check = createIcon('check');
@@ -76,15 +71,13 @@
     const Edit3 = createIcon('edit-3');
     const Trash2 = createIcon('trash-2');
     const Zap = createIcon('zap');
-    const Lock = createIcon('lock');
     const Volume2 = createIcon('volume-2');
     const VolumeX = createIcon('volume-x');
-    const AlertTriangle = createIcon('alert-triangle');
     const CheckCircle2 = createIcon('check-circle-2');
     const Clock = createIcon('clock');
-    const PieChart = createIcon('pie-chart');
     const RotateCcw = createIcon('rotate-ccw');
     const Camera = createIcon('camera');
+    const AlertTriangle = createIcon('alert-triangle');
 
     // --- SOUND SYNTHESIZER ---
     const playSound = (type, enabled = true) => {
@@ -122,6 +115,20 @@
             osc.start(ctx.currentTime + idx * 0.09);
             osc.stop(ctx.currentTime + idx * 0.09 + 0.35);
           });
+        } else if (type === 'rebirth') {
+          const notes = [300, 240, 180, 120, 280, 440];
+          notes.forEach((freq, idx) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(freq, ctx.currentTime + idx * 0.1);
+            gain.gain.setValueAtTime(0.15, ctx.currentTime + idx * 0.1);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + idx * 0.1 + 0.3);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(ctx.currentTime + idx * 0.1);
+            osc.stop(ctx.currentTime + idx * 0.1 + 0.3);
+          });
         } else if (type === 'click') {
           const osc = ctx.createOscillator();
           const gain = ctx.createGain();
@@ -143,16 +150,6 @@
       { id: 'Meditation', name: 'Meditation', icon: Moon, color: 'from-purple-500 to-pink-600' },
       { id: 'Coding', name: 'Coding', icon: Code, color: 'from-emerald-400 to-teal-600' },
       { id: 'Language', name: 'Language', icon: Globe, color: 'from-yellow-400 to-orange-600' }
-    ];
-
-    const STREAK_MILESTONES = [3, 7, 15, 21, 30, 40];
-
-    const REWARDS_MASTER = [
-      { id: 'wooden_sword', name: 'Wooden Sword', rarity: 'Common', type: 'weapon', streakReq: 3, category: 'Fitness', stats: { strength: 5 }, desc: 'A basic training sword carved from oak.', icon: '⚔️' },
-      { id: 'iron_armor', name: 'Iron Armor', rarity: 'Rare', type: 'armor', streakReq: 7, category: 'Fitness', stats: { strength: 12, discipline: 5 }, desc: 'Forged in dragonfire to withstand harsh battles.', icon: '🛡️' },
-      { id: 'shadow_blade', name: 'Shadow Blade', rarity: 'Epic', type: 'weapon', streakReq: 15, category: 'Fitness', stats: { strength: 25, focus: 10 }, desc: 'Forged from dark steel.', icon: '🗡️' },
-      { id: 'wolf_companion', name: 'Wolf Companion', rarity: 'Epic', type: 'pet', streakReq: 21, category: 'Fitness', stats: { strength: 18, discipline: 15 }, desc: 'A loyal silver wolf that runs beside you.', icon: '🐺' },
-      { id: 'excalibur', name: 'Excalibur', rarity: 'Legendary', type: 'weapon', streakReq: 30, category: 'Fitness', stats: { strength: 45, discipline: 20 }, desc: 'The legendary blade of kings.', icon: '🗡️✨' }
     ];
 
     const GET_RANK_TITLE = (streak) => {
@@ -179,8 +176,7 @@
           xpMax: 100,
           gold: 0,
           totalStreak: 0,
-          unlockedItemIds: [],
-          equipped: { weapon: null, armor: null, helmet: null, pet: null, artifact: null }
+          lastActiveDate: new Date().toISOString().split('T')[0]
         };
       });
 
@@ -195,11 +191,45 @@
       const [levelUpModal, setLevelUpModal] = useState(null);
       const [currentTime, setCurrentTime] = useState(new Date());
 
+      // --- AUTOMATIC CHECK FOR MISSED DAYS ON LOAD/NEW DAY ---
+      useEffect(() => {
+        const todayStr = new Date().toISOString().split('T')[0];
+        const lastActive = user.lastActiveDate || todayStr;
+
+        if (lastActive !== todayStr) {
+          // If a day was skipped or incomplete yesterday, enforce 0 XP penalty
+          const anyHabitMissed = habits.some(h => !h.completedToday);
+
+          if (anyHabitMissed && habits.length > 0) {
+            setUser(prev => ({
+              ...prev,
+              xp: 0,
+              totalStreak: 0,
+              lastActiveDate: todayStr
+            }));
+
+            setHabits(prevHabits =>
+              prevHabits.map(h => ({
+                ...h,
+                currentStreak: 0,
+                completedToday: false
+              }))
+            );
+          } else {
+            // Simply reset daily completion flags for the new day
+            setHabits(prevHabits =>
+              prevHabits.map(h => ({ ...h, completedToday: false }))
+            );
+            setUser(prev => ({ ...prev, lastActiveDate: todayStr }));
+          }
+        }
+      }, []);
+
       useEffect(() => {
         try {
           localStorage.setItem('questforge_user', JSON.stringify(user));
         } catch (e) {
-          console.error("Storage write error:", e);
+          console.error(e);
         }
       }, [user]);
 
@@ -207,7 +237,7 @@
         try {
           localStorage.setItem('questforge_habits', JSON.stringify(habits));
         } catch (e) {
-          console.error("Storage write error:", e);
+          console.error(e);
         }
       }, [habits]);
 
@@ -216,21 +246,17 @@
         return () => clearInterval(timer);
       }, []);
 
+      // Base stats scale dynamically with level and current consistency
       const characterStats = useMemo(() => {
-        let base = { discipline: 10, focus: 10, strength: 10, knowledge: 10 };
-        Object.values(user.equipped).forEach(itemId => {
-          if (!itemId) return;
-          const item = REWARDS_MASTER.find(r => r.id === itemId);
-          if (item && item.stats) {
-            Object.entries(item.stats).forEach(([statKey, val]) => {
-              if (base[statKey] !== undefined) base[statKey] += val;
-            });
-          }
-        });
-        return base;
-      }, [user.equipped]);
+        const factor = user.xp > 0 ? user.totalStreak : 0;
+        return {
+          strength: 10 + user.level * 2 + factor,
+          knowledge: 10 + user.level * 2 + factor,
+          focus: 10 + user.level * 2 + factor,
+          discipline: 10 + user.level * 2 + (user.xp > 0 ? user.totalStreak * 2 : 0)
+        };
+      }, [user.level, user.totalStreak, user.xp]);
 
-      // --- ROBUST XP & LEVEL ACCUMULATION HANDLER ---
       const handleCompleteQuest = (habitId) => {
         const targetHabit = habits.find(h => h.id === habitId);
         if (!targetHabit || targetHabit.completedToday) return;
@@ -240,7 +266,6 @@
         const goldToAdd = Number(targetHabit.goldReward) || 10;
         const nextStreak = (targetHabit.currentStreak || 0) + 1;
 
-        // 1. Update Habits State
         setHabits(prevHabits =>
           prevHabits.map(h => {
             if (h.id === habitId) {
@@ -257,7 +282,6 @@
 
         playSound('complete', soundEnabled);
 
-        // 2. Compute XP Level-Ups Accurately
         setUser(prevUser => {
           let currentXp = Number(prevUser.xp || 0) + xpToAdd;
           let currentLevel = Number(prevUser.level || 1);
@@ -284,7 +308,8 @@
             xp: currentXp,
             xpMax: currentXpMax,
             gold: Number(prevUser.gold || 0) + goldToAdd,
-            totalStreak: Math.max(Number(prevUser.totalStreak || 0), nextStreak)
+            totalStreak: Math.max(Number(prevUser.totalStreak || 0), nextStreak),
+            lastActiveDate: todayStr
           };
         });
       };
@@ -308,24 +333,41 @@
         setIsCreateModalOpen(false);
       };
 
+      // --- RULE: DELETING A HABIT PENALIZES ALL XP & ACTIVE STREAKS TO ZERO ---
       const handleDeleteHabit = (id) => {
-        if (window.confirm("Are you sure you want to abandon and delete this habit quest?")) {
-          setHabits(prev => prev.filter(h => h.id !== id));
-          playSound('click', soundEnabled);
+        if (window.confirm("⚠️ PENALTY WARNING:\nDeleting a habit breaks consistency. Doing so will turn your XP and streaks back to ZERO!\n\nProceed?")) {
+          setHabits(prev => prev.filter(h => h.id !== id).map(h => ({ ...h, currentStreak: 0 })));
+          setUser(prev => ({
+            ...prev,
+            xp: 0,
+            totalStreak: 0
+          }));
+          playSound('rebirth', soundEnabled);
+        }
+      };
+
+      // --- PHOENIX REBIRTH (MANUAL PENALTY RESET FOR FAILED TASKS) ---
+      const handlePhoenixRebirth = () => {
+        if (window.confirm("🔥 INITIATE PHOENIX REBIRTH?\n\nThis will purge all accrued daily XP and reset active streaks back to ZERO for missed or failed goals, allowing you to rise from the ashes fresh today!")) {
+          playSound('rebirth', soundEnabled);
+          setUser(prev => ({
+            ...prev,
+            xp: 0,
+            totalStreak: 0
+          }));
+          setHabits(prevHabits =>
+            prevHabits.map(h => ({
+              ...h,
+              currentStreak: 0,
+              completedToday: false
+            }))
+          );
         }
       };
 
       const handleSaveProfile = (profileData) => {
         setUser(prev => ({ ...prev, name: profileData.name, avatar: profileData.avatar }));
         playSound('click', soundEnabled);
-      };
-
-      const handleResetData = () => {
-        if (window.confirm("Reset QuestForge data to initial state?")) {
-          localStorage.removeItem('questforge_user');
-          localStorage.removeItem('questforge_habits');
-          window.location.reload();
-        }
       };
 
       const formattedDate = currentTime.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
@@ -354,7 +396,7 @@
                 </div>
               </div>
 
-              {/* QUICK STATS HEADER BADGES */}
+              {/* QUICK STATS & PHOENIX REBIRTH ACTION */}
               <div className="flex items-center gap-3 sm:gap-4 overflow-x-auto py-1">
                 <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-800/80 border border-slate-700/60">
                   <span className="text-xs text-slate-400">Level</span>
@@ -379,6 +421,16 @@
                   <span className="font-extrabold text-amber-400">{user.totalStreak} Days</span>
                 </div>
 
+                {/* PHOENIX REBIRTH BUTTON */}
+                <button
+                  onClick={handlePhoenixRebirth}
+                  className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 text-slate-950 font-black text-xs shadow-lg shadow-rose-500/20 transition active:scale-95"
+                  title="Phoenix Rebirth: Burn XP & Streaks back to 0 for missed tasks"
+                >
+                  <span>🦅</span>
+                  <span className="hidden sm:inline">Phoenix Rebirth</span>
+                </button>
+
                 <button
                   onClick={() => setSoundEnabled(!soundEnabled)}
                   className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition"
@@ -386,18 +438,10 @@
                 >
                   {soundEnabled ? <Volume2 className="w-4 h-4 text-amber-400" /> : <VolumeX className="w-4 h-4 text-slate-500" />}
                 </button>
-
-                <button
-                  onClick={handleResetData}
-                  className="p-2 rounded-xl bg-slate-800 hover:bg-rose-950/50 text-slate-400 hover:text-rose-400 border border-slate-700 transition"
-                  title="Reset Demo Data"
-                >
-                  <RotateCcw className="w-4 h-4" />
-                </button>
               </div>
             </header>
 
-            {/* TAB NAVIGATION */}
+            {/* NAVIGATION TABS */}
             <nav className="flex items-center gap-1 overflow-x-auto p-1.5 rounded-2xl bg-slate-900/90 border border-slate-800 backdrop-blur-md mb-6 shadow-inner scrollbar-none">
               {[
                 { id: 'dashboard', label: 'Dashboard', icon: Compass },
@@ -433,6 +477,7 @@
                   characterStats={characterStats}
                   onComplete={handleCompleteQuest}
                   onDelete={handleDeleteHabit}
+                  onPhoenixRebirth={handlePhoenixRebirth}
                   onOpenCreate={() => setIsCreateModalOpen(true)}
                   onOpenEditProfile={() => setIsEditProfileOpen(true)}
                 />
@@ -489,10 +534,9 @@
     // ==========================================
     // DASHBOARD VIEW
     // ==========================================
-    function DashboardView({ user, habits, currentRank, characterStats, onComplete, onDelete, onOpenCreate, onOpenEditProfile }) {
+    function DashboardView({ user, habits, currentRank, characterStats, onComplete, onDelete, onPhoenixRebirth, onOpenCreate, onOpenEditProfile }) {
       const activeQuests = habits.filter(h => !h.completedToday);
       const completedTodayList = habits.filter(h => h.completedToday);
-      const completionRate = habits.length ? Math.round((completedTodayList.length / habits.length) * 100) : 0;
 
       return (
         <div className="space-y-6">
@@ -583,18 +627,27 @@
             </div>
           </div>
 
-          {/* ACTIVE QUESTS */}
+          {/* ACTIVE QUESTS BOARD */}
           <div className="space-y-4">
             <div className="flex justify-between items-center">
               <h3 className="text-lg font-bold font-serif text-slate-100 flex items-center gap-2">
                 <Sword className="w-5 h-5 text-amber-400" /> Active Daily Quests ({activeQuests.length})
               </h3>
-              <button
-                onClick={onOpenCreate}
-                className="flex items-center gap-1.5 text-xs font-bold text-slate-950 bg-amber-400 hover:bg-amber-300 px-3 py-1.5 rounded-xl transition shadow-md shadow-amber-500/20"
-              >
-                <Plus className="w-4 h-4" /> New Quest
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={onPhoenixRebirth}
+                  className="flex items-center gap-1 text-xs font-bold text-rose-400 bg-rose-950/40 hover:bg-rose-900/50 border border-rose-800/60 px-3 py-1.5 rounded-xl transition"
+                  title="Failed a quest? Reset XP & streak to 0"
+                >
+                  <span>🔥</span> Rebirth
+                </button>
+                <button
+                  onClick={onOpenCreate}
+                  className="flex items-center gap-1.5 text-xs font-bold text-slate-950 bg-amber-400 hover:bg-amber-300 px-3 py-1.5 rounded-xl transition shadow-md shadow-amber-500/20"
+                >
+                  <Plus className="w-4 h-4" /> New Quest
+                </button>
+              </div>
             </div>
 
             {habits.length === 0 ? (
@@ -613,7 +666,7 @@
                   ✨
                 </div>
                 <h4 className="font-bold text-slate-200">All Daily Quests Cleared!</h4>
-                <p className="text-xs text-slate-400">You've conquered every habit quest today.</p>
+                <p className="text-xs text-slate-400">Consistency intact. Your streak and experience are preserved.</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -647,7 +700,7 @@
                           <button
                             onClick={() => onDelete(habit.id)}
                             className="p-1 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-950/40 transition"
-                            title="Delete Habit"
+                            title="Delete Habit (Warning: Clears XP to zero)"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -711,7 +764,7 @@
               <h2 className="text-xl font-bold font-serif text-slate-100 flex items-center gap-2">
                 <Sword className="w-5 h-5 text-amber-400" /> Habit Quests Board
               </h2>
-              <p className="text-xs text-slate-400">Create custom habits and manage active daily routines.</p>
+              <p className="text-xs text-slate-400">Manage daily routines. Remember: deleting active quests breaks your streak and zeroes XP.</p>
             </div>
 
             <button
@@ -939,7 +992,6 @@
     function CreateHabitModal({ habitToEdit, onSave, onClose }) {
       const [name, setName] = useState(habitToEdit?.name || '');
       const [category, setCategory] = useState(habitToEdit?.category || 'Fitness');
-      const [difficulty, setDifficulty] = useState(habitToEdit?.difficulty || 'Rare');
       const [reminderTime, setReminderTime] = useState(habitToEdit?.reminderTime || '09:00');
       const [xpReward, setXpReward] = useState(habitToEdit?.xpReward || 50);
       const [goldReward, setGoldReward] = useState(habitToEdit?.goldReward || 25);
@@ -950,7 +1002,6 @@
         onSave({
           name,
           category,
-          difficulty,
           reminderTime,
           xpReward: Number(xpReward) || 25,
           goldReward: Number(goldReward) || 10
@@ -1043,7 +1094,7 @@
           <div className="w-full max-w-sm rounded-3xl bg-gradient-to-b from-purple-900 to-slate-900 border-2 border-amber-400 p-6 text-center space-y-4 shadow-2xl">
             <div className="text-5xl">⚡ HERO LEVEL UP! ⚡</div>
             <h3 className="text-3xl font-extrabold text-amber-400 font-serif">Level {level}</h3>
-            <p className="text-xs text-slate-300">Your habit consistency has elevated your hero stats! XP and Quest rewards increased.</p>
+            <p className="text-xs text-slate-300">Your habit consistency has elevated your hero stats!</p>
             <button
               onClick={onClose}
               className="w-full py-2.5 rounded-xl bg-amber-400 text-slate-950 font-bold text-xs shadow-lg"
